@@ -16,7 +16,6 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,6 +40,11 @@ import com.example.my_music_app.Screen
 import com.example.my_music_app.screenInDrawer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +59,7 @@ fun MainView(){
         mutableStateOf(false)
     }
 
-    var title by remember { mutableStateOf(currentScreen.title) }
+    var title by remember { mutableStateOf(Screen.DrawerScreen.Account.dTitle) }
     val scaffoldState: ScaffoldState= rememberScaffoldState()
     val scope: CoroutineScope= rememberCoroutineScope()
 
@@ -65,20 +69,25 @@ fun MainView(){
     val currentRoute=navBackStackEntry?.destination?.route
 
     Scaffold (
-
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars),
+        scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar(title = { Text("Home") },
+            androidx.compose.material.TopAppBar(
+                title = { Text(title) },
                 navigationIcon = { IconButton(onClick = {
-                    //open the drawer
                     scope.launch {
                         scaffoldState.drawerState.open()
                     }
                 }){
                     Icon(imageVector = Icons.Default.AccountCircle,
                         contentDescription = null
-                        )
-                } }
-                )
+                    )
+                } },
+                backgroundColor = Color(0, 194, 111, 255),
+                contentColor = Color.White
+            )
         },
         drawerContent={
             LazyColumn(Modifier.padding(16.dp)) {
@@ -147,11 +156,11 @@ fun DrawerItem(
 fun Navigation(navController: NavController, viewModel: MainViewModel,pd:PaddingValues){
 
     NavHost(navController = navController as NavHostController,
-        startDestination = Screen.DrawerScreen.AddAccount.route,
+        startDestination = Screen.DrawerScreen.Account.route,
         modifier = Modifier.padding(pd)
         ){
-        composable(Screen.DrawerScreen.AddAccount.route){
-
+        composable(Screen.DrawerScreen.Account.route){
+                AccountView()
         }
         composable(Screen.DrawerScreen.Subscription.route){
 
