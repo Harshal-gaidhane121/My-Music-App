@@ -43,8 +43,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import com.example.my_music_app.R
+import com.example.my_music_app.screenInBottom
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +73,33 @@ fun MainView(){
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentRoute=navBackStackEntry?.destination?.route
 
+    val bottomBar: @Composable () ->  Unit = {
+         if(currentScreen is Screen.DrawerScreen || currentScreen== Screen.BottomScreen.Home){
+             BottomNavigation(
+                 backgroundColor = Color(0, 194, 111, 255),
+                 modifier = Modifier.height(70.dp)
+                 ) {
+                 screenInBottom.forEach{
+                     item->
+                     BottomNavigationItem(
+                         selected = currentRoute == item.bRoute,
+                         onClick = {
+                             controller.navigate(item.bRoute)
+                                   },
+                         icon = { Icon(painter = painterResource(id=item.icon),contentDescription = null) },
+
+                         label = {Text(item.btitle)},
+                         selectedContentColor = Color.White,
+                         unselectedContentColor = Color.Black,
+                     )
+                 }
+             }
+         }
+    }
+
+
     Scaffold (
+        bottomBar=bottomBar,
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -159,6 +190,15 @@ fun Navigation(navController: NavController, viewModel: MainViewModel,pd:Padding
         startDestination = Screen.DrawerScreen.Account.route,
         modifier = Modifier.padding(pd)
         ){
+        composable(Screen.BottomScreen.Home.bRoute){
+            Home()
+        }
+        composable(Screen.BottomScreen.Browse.bRoute){
+            //todo
+        }
+        composable(Screen.BottomScreen.Library.bRoute){
+            //todo
+        }
         composable(Screen.DrawerScreen.Account.route){
                 AccountView()
         }
