@@ -2,6 +2,8 @@ package com.example.my_music_app.ui.theme
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,12 +48,23 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.ui.unit.sp
+
 import com.example.my_music_app.R
 import com.example.my_music_app.screenInBottom
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MainView(){
 
@@ -63,7 +76,19 @@ fun MainView(){
     val dialogOpen=remember{
         mutableStateOf(false)
     }
+    val isSheetFullScreen by remember {
+        mutableStateOf(false)
+    }
+    val modalSheetState= rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+        confirmValueChange = {
+            it != ModalBottomSheetValue.HalfExpanded
+        }
+    )
 
+    val roundedCornerRadius=if(isSheetFullScreen) 0.dp else 12.dp
+
+    val modifier=if(isSheetFullScreen)Modifier.fillMaxSize() else Modifier.fillMaxWidth()
     var title by remember { mutableStateOf(Screen.DrawerScreen.Account.dTitle) }
     val scaffoldState: ScaffoldState= rememberScaffoldState()
     val scope: CoroutineScope= rememberCoroutineScope()
@@ -81,14 +106,18 @@ fun MainView(){
                  ) {
                  screenInBottom.forEach{
                      item->
+                     val isSelected = currentRoute == item.bRoute
+                     val tint = if(isSelected) Color.White else Color.Black
                      BottomNavigationItem(
                          selected = currentRoute == item.bRoute,
                          onClick = {
+                             title=item.btitle
                              controller.navigate(item.bRoute)
                                    },
-                         icon = { Icon(painter = painterResource(id=item.icon),contentDescription = null) },
-
-                         label = {Text(item.btitle)},
+                         icon = {
+                             Icon(painter = painterResource(id=item.icon),contentDescription = null,tint=tint)
+                                },
+                         label = {Text(item.btitle, color =tint)},
                          selectedContentColor = Color.White,
                          unselectedContentColor = Color.Black,
                      )
@@ -98,32 +127,51 @@ fun MainView(){
     }
 
 
-    Scaffold (
-        bottomBar=bottomBar,
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars),
-        scaffoldState = scaffoldState,
-        topBar = {
-            androidx.compose.material.TopAppBar(
-                title = { Text(title) },
-                navigationIcon = { IconButton(onClick = {
-                    scope.launch {
-                        scaffoldState.drawerState.open()
-                    }
-                }){
-                    Icon(imageVector = Icons.Default.AccountCircle,
-                        contentDescription = null
-                    )
-                } },
-                backgroundColor = Color(0, 194, 111, 255),
-                contentColor = Color.White
-            )
-        },
-        drawerContent={
-            LazyColumn(Modifier.padding(16.dp)) {
-                items(screenInDrawer){
-                    item->
+    ModalBottomSheetLayout(
+        sheetState = modalSheetState,
+        sheetShape = RoundedCornerShape(roundedCornerRadius),
+        sheetContent = {
+        MoreBottomSheet(modifier=modifier)
+    }) {
+        Scaffold (
+            bottomBar=bottomBar,
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars),
+            scaffoldState = scaffoldState,
+            topBar = {
+                androidx.compose.material.TopAppBar(
+                    actions = {
+                        androidx.compose.material.IconButton(
+                            onClick = {
+                                scope.launch {
+                                    if(modalSheetState.isVisible)modalSheetState.hide()
+                                    else modalSheetState.show()
+                                }
+                            }
+                        ) {
+                            Icon(imageVector = Icons.Default.MoreVert,
+                                contentDescription = null)
+                        }
+                    },
+                    title = { Text(title) },
+                    navigationIcon = { IconButton(onClick = {
+                        scope.launch {
+                            scaffoldState.drawerState.open()
+                        }
+                    }){
+                        Icon(imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null
+                        )
+                    } },
+                    backgroundColor = Color(0, 194, 111, 255),
+                    contentColor = Color.White
+                )
+            },
+            drawerContent={
+                LazyColumn(Modifier.padding(16.dp)) {
+                    items(screenInDrawer){
+                            item->
                         DrawerItem(selected =currentRoute==item.dRoute ,item=item) {
                             scope.launch {
                                 scaffoldState.drawerState.close()
@@ -139,20 +187,24 @@ fun MainView(){
 
 
 
+                    }
                 }
             }
+
+        ){
+            Navigation(
+                navController = controller,
+                viewModel = viewModel,
+                pd = it
+            )
+
+            AccountDialog(dialogOpen)
         }
-
-    ){
-        Navigation(
-            navController = controller,
-            viewModel = viewModel,
-            pd = it
-        )
-
-        AccountDialog(dialogOpen)
     }
-}
+    }
+
+
+
 
 @Composable
 fun DrawerItem(
@@ -204,6 +256,34 @@ fun Navigation(navController: NavController, viewModel: MainViewModel,pd:Padding
         }
         composable(Screen.DrawerScreen.Subscription.route){
                 SubscriptionView()
+        }
+    }
+
+}
+
+@Composable
+fun MoreBottomSheet(modifier: Modifier){
+
+    Box(modifier=modifier.fillMaxWidth().height(300.dp).background(Color(98, 194, 106, 255))){
+        Column() {
+            Row(modifier=Modifier.padding(20.dp)){
+               Icon(imageVector = Icons.Default.Settings,
+                   contentDescription = null
+               )
+                Text(text = "Settings",modifier=Modifier.padding(horizontal = 10.dp), fontSize = 20.sp)
+            }
+            Row(modifier=Modifier.padding(20.dp)){
+                Icon(imageVector = Icons.Default.Share,
+                    contentDescription = null
+                )
+                Text(text = "Share",modifier=Modifier.padding(horizontal = 10.dp), fontSize = 20.sp)
+            }
+            Row(modifier=Modifier.padding(20.dp)){
+                Icon(imageVector = Icons.Default.Info,
+                    contentDescription = null
+                )
+                Text(text = "Help",modifier=Modifier.padding(horizontal = 10.dp), fontSize = 20.sp)
+            }
         }
     }
 
