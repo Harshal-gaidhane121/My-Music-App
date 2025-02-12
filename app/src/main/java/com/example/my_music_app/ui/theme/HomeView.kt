@@ -43,7 +43,7 @@ fun Home(){
 @Composable
 fun BrowserItem(cat: String,drawable: Int){
      Card (
-         modifier = Modifier.size(200.dp).padding(horizontal = 20.dp, vertical = 10.dp),
+         modifier = Modifier.size(200.dp).padding(20.dp),
          elevation = 10.dp,
          shape = RoundedCornerShape(20.dp)
          ){

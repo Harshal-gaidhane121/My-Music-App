@@ -194,10 +194,10 @@ fun Navigation(navController: NavController, viewModel: MainViewModel,pd:Padding
             Home()
         }
         composable(Screen.BottomScreen.Browse.bRoute){
-            //todo
+            Browse()
         }
         composable(Screen.BottomScreen.Library.bRoute){
-            //todo
+            Library()
         }
         composable(Screen.DrawerScreen.Account.route){
                 AccountView()
